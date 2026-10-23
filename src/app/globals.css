@@ -77,6 +77,29 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   display: inline-flex;
 }
 
+/* Hide Netlify Injected Floating Badge, Drawer, and Review Widgets */
+iframe[src*="netlify"],
+iframe[id*="netlify"],
+iframe[class*="netlify"],
+#netlify-badge-iframe,
+#netlify-drawer,
+netlify-drawer,
+netlify-feedback,
+[class*="netlify-badge"],
+[id*="netlify-badge"],
+body > iframe[style*="fixed"],
+body > iframe[style*="z-index"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
+
 /* Mobile Header (Hidden on Desktop) */
 .mobile-header {
   display: none;
@@ -2198,7 +2221,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 99999 !important;
     height: calc(58px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: rgba(255, 255, 255, 0.95);

@@ -385,6 +385,44 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, filtered.length]);
 
+  // Automatically dismiss or remove Netlify floating badge / drawer widgets blocking the UI
+  useEffect(() => {
+    function purgeNetlifyBadge() {
+      const candidates = document.querySelectorAll(
+        '#netlify-drawer, netlify-drawer, #netlify-badge-iframe, iframe[src*="netlify"], [class*="netlify-badge"]'
+      );
+      candidates.forEach((el) => {
+        (el as HTMLElement).style.display = "none";
+        (el as HTMLElement).style.visibility = "hidden";
+        (el as HTMLElement).style.pointerEvents = "none";
+        try { el.remove(); } catch {}
+      });
+
+      // Target any injected fixed iframe sitting near bottom
+      document.querySelectorAll("body > iframe").forEach((iframe) => {
+        try {
+          const style = window.getComputedStyle(iframe);
+          if (style.position === "fixed") {
+            (iframe as HTMLElement).style.display = "none";
+            iframe.remove();
+          }
+        } catch {}
+      });
+    }
+
+    purgeNetlifyBadge();
+    const interval = setInterval(purgeNetlifyBadge, 1000);
+    const observer = new MutationObserver(purgeNetlifyBadge);
+    try {
+      observer.observe(document.body, { childList: true, subtree: true });
+    } catch {}
+
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
+  }, []);
+
   function handleKindSelect(k: ContentKind | "all") {
     setActiveKind(k);
     if (k === "photo" || k === "video") {
