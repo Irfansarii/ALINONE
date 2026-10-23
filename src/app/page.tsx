@@ -48,8 +48,9 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { db, type ContentKind, type VaultFolder, type VaultItem } from "@/lib/db";
-import { exportBackup, importBackup } from "@/lib/backup";
-import { downloadSingleItem, exportToWindowsFolder, exportSingleFolderToWindows } from "@/lib/folderExport";
+import { importBackup } from "@/lib/backup";
+import { downloadSingleItem, exportToWindowsFolder } from "@/lib/folderExport";
+import { exportVaultToZip, exportSingleFolderToZip } from "@/lib/zipExport";
 
 const FOLDER_ICON_OPTIONS: { id: string; label: string; icon: LucideIcon }[] = [
   { id: "folder", label: "Folder", icon: FolderIcon },
@@ -512,8 +513,9 @@ export default function Home() {
         setMessage(`Folder "${folder.name}" is empty. Add items first.`);
         return;
       }
-      const res = await exportSingleFolderToWindows(folder, fItems);
-      setMessage(`Exported ${res.count} items from "${folder.name}" into your Windows folder!`);
+      setMessage(`Packaging "${folder.name}" with real photos, videos, notes & code into ZIP...`);
+      const res = await exportSingleFolderToZip(folder, fItems);
+      setMessage(`Downloaded "${res.zipName}" with ${res.count} real files (No JSON)!`);
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       const errMessage = err instanceof Error ? err.message : "Export failed";
@@ -594,14 +596,23 @@ export default function Home() {
     setMessage("Item deleted from this device.");
   }
 
-  async function handleExport() {
+  async function handleExportZip() {
     try {
-      await exportBackup(await db.items.toArray(), await db.folders.toArray());
-      setMessage("Backup export started with all items and folders. Keep the downloaded JSON file safe.");
-    } catch {
-      setMessage("Backup export failed. Very large libraries may need to be exported in smaller batches.");
+      const all = await db.items.toArray();
+      if (all.length === 0) {
+        setMessage("Your vault is currently empty. Add some items first.");
+        return;
+      }
+      const allFolders = await db.folders.toArray();
+      setMessage("Packaging all real photos, videos, notes and code into a ZIP archive (No JSON)...");
+      const res = await exportVaultToZip(all, allFolders);
+      setMessage(`Downloaded "${res.zipName}" with ${res.count} real files (No JSON)!`);
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : "Export failed";
+      setMessage(errMessage);
     }
   }
+
 
   async function handleSaveToFolder() {
     try {
@@ -841,14 +852,17 @@ export default function Home() {
           </div>
 
           <div className="backup-actions">
-            <button className="secondary full" onClick={handleExport} title="Download a single backup JSON file">
-              <Download size={14} /> Export Backup JSON
-            </button>
             <button
               className="primary full"
+              onClick={handleExportZip}
+              title="Download all real photos, videos, notes and code files in a ZIP archive (No JSON)"
+            >
+              <Archive size={14} /> Export All to ZIP
+            </button>
+            <button
+              className="secondary full"
               onClick={handleSaveToFolder}
               title="Save all your files organized directly into a Windows folder"
-              style={{ background: "#2563eb", borderColor: "#1d4ed8" }}
             >
               <HardDrive size={14} /> Save to PC Folder
             </button>
@@ -886,6 +900,13 @@ export default function Home() {
           </div>
 
           <div className="top-actions">
+            <button
+              className="secondary desktop-only"
+              onClick={handleExportZip}
+              title="Download all real photos, videos, notes and code files in a ZIP archive (No JSON)"
+            >
+              <Archive size={14} /> Export to ZIP
+            </button>
             <button
               className="secondary desktop-only"
               onClick={handleSaveToFolder}
@@ -968,9 +989,9 @@ export default function Home() {
                 <button
                   className="secondary"
                   onClick={() => handleExportCurrentFolder(activeFolder)}
-                  title="Export this folder to your PC with Photos, Videos, Code subfolders"
+                  title="Export this folder as a ZIP with real photos, videos, notes and code (No JSON)"
                 >
-                  <FolderOpen size={15} /> Export Folder to PC
+                  <Archive size={15} /> Export Folder to ZIP
                 </button>
                 <button className="secondary" onClick={() => openEditFolder(activeFolder)}>
                   <Pencil size={15} /> Edit
@@ -1127,8 +1148,8 @@ export default function Home() {
                         <FolderGlyph icon={folder.icon} size={22} />
                       </div>
                       <div className="folder-card-head-actions" onClick={(e) => e.stopPropagation()}>
-                        <button title="Export folder to PC" onClick={() => handleExportCurrentFolder(folder)}>
-                          <FolderOpen size={14} />
+                        <button title="Export folder as ZIP (Real files, no JSON)" onClick={() => handleExportCurrentFolder(folder)}>
+                          <Archive size={14} />
                         </button>
                         <button title="Edit folder" onClick={() => openEditFolder(folder)}>
                           <Pencil size={14} />
