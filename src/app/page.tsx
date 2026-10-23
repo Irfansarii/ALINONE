@@ -695,6 +695,14 @@ export default function Home() {
         <div className="mobile-header-actions">
           <button
             className="mobile-header-btn"
+            onClick={handleExportZip}
+            title="Export all to ZIP (No JSON)"
+            aria-label="Export all to ZIP"
+          >
+            <Archive size={17} />
+          </button>
+          <button
+            className="mobile-header-btn"
             onClick={() => { openNewFolder(); setMobileMenuOpen(false); }}
             title="Create Folder"
             aria-label="Create Folder"
@@ -900,12 +908,22 @@ export default function Home() {
           </div>
 
           <div className="top-actions">
+            <button className="primary" onClick={() => openNew()}>
+              <Plus size={15} /> Add item
+            </button>
             <button
-              className="secondary desktop-only"
+              className="secondary"
               onClick={handleExportZip}
               title="Download all real photos, videos, notes and code files in a ZIP archive (No JSON)"
             >
-              <Archive size={14} /> Export to ZIP
+              <Archive size={14} /> Export ZIP
+            </button>
+            <button
+              className="secondary"
+              onClick={() => openNewFolder()}
+              title="Create a new folder to organize files by location or topic"
+            >
+              <FolderPlus size={14} /> New Folder
             </button>
             <button
               className="secondary desktop-only"
@@ -913,12 +931,6 @@ export default function Home() {
               title="Save all your files directly into a Windows directory with subfolders for photos, code, etc."
             >
               <HardDrive size={14} /> Save to PC Folder
-            </button>
-            <button className="secondary desktop-only" onClick={() => openNewFolder()} title="Create a new folder to organize files by location or topic">
-              <FolderPlus size={14} /> New Folder
-            </button>
-            <button className="primary" onClick={() => openNew()}>
-              <Plus size={15} /> Add item
             </button>
           </div>
         </header>

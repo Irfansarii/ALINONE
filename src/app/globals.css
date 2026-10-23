@@ -2024,17 +2024,38 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 /* Large Tablets & Small Laptops (max-width: 1024px) */
 @media (max-width: 1024px) {
   .topbar {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .topbar-search-area {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .topbar-search-area .search-box {
+    width: 100%;
   }
 
   .top-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     width: 100%;
+    margin-left: 0;
+  }
+
+  .top-actions button {
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 105px;
+    justify-content: center;
+    padding: 9px 10px;
+    font-size: 12px;
   }
 
   .stats-grid {
@@ -2164,15 +2185,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   }
 }
 
-/* Mobile & Small Tablets (max-width: 768px) */
-@media (max-width: 768px) {
+/* Mobile & Tablets (max-width: 900px) */
+@media (max-width: 900px) {
   .desktop-only {
     display: none !important;
   }
 
   /* Show Mobile Bottom Navigation Bar */
   .mobile-bottom-nav {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -2273,13 +2294,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   }
 
   .top-actions {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     width: 100%;
   }
 
   .top-actions button {
-    padding: 9px 8px;
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: 95px;
+    padding: 8px 6px;
     font-size: 11px;
     justify-content: center;
     border-radius: 9px;
