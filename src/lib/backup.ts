@@ -1,6 +1,14 @@
-import type { VaultItem } from "@/lib/db";
+import type { VaultFolder, VaultItem } from "@/lib/db";
 
 type BackupItem = Omit<VaultItem, "blob"> & { blobBase64?: string };
+
+interface BackupPayload {
+  app: string;
+  version: number;
+  exportedAt: string;
+  items: BackupItem[];
+  folders?: VaultFolder[];
+}
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,19 +29,20 @@ function base64ToBlob(base64: string, mimeType = "application/octet-stream"): Bl
   return new Blob([bytes], { type: mimeType });
 }
 
-export async function exportBackup(items: VaultItem[]) {
+export async function exportBackup(items: VaultItem[], folders: VaultFolder[] = []) {
   const output: BackupItem[] = [];
   for (const item of items) {
     const { blob, ...rest } = item;
     output.push({ ...rest, ...(blob ? { blobBase64: await blobToBase64(blob) } : {}) });
   }
-  const payload = {
+  const payload: BackupPayload = {
     app: "PersonalContentVault",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
+    folders,
     items: output
   };
-  const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -42,17 +51,19 @@ export async function exportBackup(items: VaultItem[]) {
   URL.revokeObjectURL(url);
 }
 
-export async function importBackup(file: File): Promise<VaultItem[]> {
+export async function importBackup(file: File): Promise<{ items: VaultItem[]; folders: VaultFolder[] }> {
   const parsed: unknown = JSON.parse(await file.text());
   if (!parsed || typeof parsed !== "object" || !("app" in parsed) || !("items" in parsed)) {
     throw new Error("This does not look like a Personal Content Vault backup.");
   }
-  const payload = parsed as { app: string; version: number; items: BackupItem[] };
+  const payload = parsed as BackupPayload;
   if (payload.app !== "PersonalContentVault" || !Array.isArray(payload.items)) {
     throw new Error("Unsupported backup format.");
   }
-  return payload.items.map((item) => {
-    const { blobBase64, id: _oldId, ...rest } = item;
+
+  const items: VaultItem[] = payload.items.map((item) => {
+    const { blobBase64, id, ...rest } = item;
+    void id;
     return {
       ...rest,
       ...(blobBase64 ? { blob: base64ToBlob(blobBase64, item.mimeType) } : {}),
@@ -61,4 +72,19 @@ export async function importBackup(file: File): Promise<VaultItem[]> {
       tags: Array.isArray(item.tags) ? item.tags : []
     };
   });
+
+  const folders: VaultFolder[] = Array.isArray(payload.folders)
+    ? payload.folders.map((folder) => {
+        const { id, ...rest } = folder;
+        void id;
+        return {
+          ...rest,
+          createdAt: folder.createdAt || new Date().toISOString(),
+          updatedAt: folder.updatedAt || new Date().toISOString()
+        };
+      })
+    : [];
+
+  return { items, folders };
 }
+
